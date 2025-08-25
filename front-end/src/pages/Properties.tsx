@@ -191,6 +191,57 @@ const Properties: React.FC = () => {
     setShowUnitsModal(true);
   };
 
+  const openEditUnitModal = (unit: Unit) => {
+    setSelectedUnit(unit);
+    setUnitFormData({
+      unitNumber: unit.unit_number,
+      floorNumber: unit.floor_number?.toString() || '',
+      roomCount: unit.room_count?.toString() || '',
+      monthlyRent: unit.monthly_rent.toString(),
+      deposit: unit.deposit.toString(),
+    });
+    setShowEditUnitModal(true);
+  };
+
+  const handleUpdateUnit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedUnit) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/units/${selectedUnit.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          unitNumber: unitFormData.unitNumber,
+          floorNumber: unitFormData.floorNumber ? parseInt(unitFormData.floorNumber) : null,
+          roomCount: unitFormData.roomCount ? parseInt(unitFormData.roomCount) : null,
+          monthlyRent: parseFloat(unitFormData.monthlyRent),
+          deposit: parseFloat(unitFormData.deposit),
+        }),
+      });
+
+      if (response.ok) {
+        setShowEditUnitModal(false);
+        setSelectedUnit(null);
+        resetUnitForm();
+        if (selectedProperty) {
+          fetchPropertyUnits(selectedProperty.id);
+          fetchProperties(); // Refresh properties to update any changes
+        }
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to update unit');
+      }
+    } catch (error) {
+      console.error('Failed to update unit:', error);
+      alert('Failed to update unit');
+    }
+  };
+
   const handleAddUnit = (property: Property) => {
     setSelectedProperty(property);
     setUnitFormData(prev => ({
@@ -235,11 +286,7 @@ const Properties: React.FC = () => {
         fetchProperties();
         if (showUnitsModal && selectedProperty) {
           fetchPropertyUnits(selectedProperty.id);
-          fetchProperties(); // Refresh properties to update unit counts
         }
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to delete unit');
       }
     } catch (error: any) {
       console.error('Failed to create unit:', error);
