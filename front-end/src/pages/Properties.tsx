@@ -235,7 +235,11 @@ const Properties: React.FC = () => {
         fetchProperties();
         if (showUnitsModal && selectedProperty) {
           fetchPropertyUnits(selectedProperty.id);
+          fetchProperties(); // Refresh properties to update unit counts
         }
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to delete unit');
       }
     } catch (error: any) {
       console.error('Failed to create unit:', error);
