@@ -191,57 +191,6 @@ const Properties: React.FC = () => {
     setShowUnitsModal(true);
   };
 
-  const openEditUnitModal = (unit: Unit) => {
-    setSelectedUnit(unit);
-    setUnitFormData({
-      unitNumber: unit.unit_number,
-      floorNumber: unit.floor_number?.toString() || '',
-      roomCount: unit.room_count?.toString() || '',
-      monthlyRent: unit.monthly_rent.toString(),
-      deposit: unit.deposit.toString(),
-    });
-    setShowEditUnitModal(true);
-  };
-
-  const handleUpdateUnit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!selectedUnit) return;
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/units/${selectedUnit.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          unitNumber: unitFormData.unitNumber,
-          floorNumber: unitFormData.floorNumber ? parseInt(unitFormData.floorNumber) : null,
-          roomCount: unitFormData.roomCount ? parseInt(unitFormData.roomCount) : null,
-          monthlyRent: parseFloat(unitFormData.monthlyRent),
-          deposit: parseFloat(unitFormData.deposit),
-        }),
-      });
-
-      if (response.ok) {
-        setShowEditUnitModal(false);
-        setSelectedUnit(null);
-        resetUnitForm();
-        if (selectedProperty) {
-          fetchPropertyUnits(selectedProperty.id);
-          fetchProperties(); // Refresh properties to update any changes
-        }
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Failed to update unit');
-      }
-    } catch (error) {
-      console.error('Failed to update unit:', error);
-      alert('Failed to update unit');
-    }
-  };
-
   const handleAddUnit = (property: Property) => {
     setSelectedProperty(property);
     setUnitFormData(prev => ({
@@ -879,6 +828,130 @@ const Properties: React.FC = () => {
                     type="button"
                     onClick={() => {
                       setShowAddUnitModal(false);
+                      resetUnitForm();
+                    }}
+                    className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Unit Modal */}
+      {showEditUnitModal && selectedUnit && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <form onSubmit={handleUpdateUnit}>
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">
+                      Edit Unit {selectedUnit.unit_number}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Unit Number *
+                        </label>
+                        <input
+                          type="text"
+                          name="unitNumber"
+                          required
+                          value={unitFormData.unitNumber}
+                          onChange={handleUnitInputChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="e.g., 101, A1, etc."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Floor Number
+                          </label>
+                          <input
+                            type="number"
+                            name="floorNumber"
+                            value={unitFormData.floorNumber}
+                            onChange={handleUnitInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="1"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Room Count
+                          </label>
+                          <input
+                            type="number"
+                            name="roomCount"
+                            value={unitFormData.roomCount}
+                            onChange={handleUnitInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="2"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Monthly Rent *
+                          </label>
+                          <input
+                            type="number"
+                            name="monthlyRent"
+                            required
+                            step="0.01"
+                            value={unitFormData.monthlyRent}
+                            onChange={handleUnitInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="1000.00"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Security Deposit *
+                          </label>
+                          <input
+                            type="number"
+                            name="deposit"
+                            required
+                            step="0.01"
+                            value={unitFormData.deposit}
+                            onChange={handleUnitInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="2000.00"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                  <button
+                    type="submit"
+                    className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  >
+                    Update Unit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditUnitModal(false);
+                      setSelectedUnit(null);
                       resetUnitForm();
                     }}
                     className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
